@@ -1,0 +1,12 @@
+{
+    "name": "lms-client",
+    "version": "1.0.0",
+    "description": "LMS frontend for course management",
+    "scripts": {
+      "start": "http-server public"
+    },
+    "dependencies": {},
+    "devDependencies": {
+      "http-server": "^14.1.1"
+    }
+  }

@@ -1,0 +1,19 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  form, ul {
+    margin-bottom: 20px;
+  }
+  input, textarea, button {
+    margin: 5px;
+    padding: 5px;
+  }
+  li {
+    margin: 10px 0;
+  }
