@@ -1,64 +1,5 @@
 const { useState, useEffect } = React;
 
-const api = {
-  async getCourses() {
-    const response = await fetch('http://localhost:5000/api/courses');
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  },
-  async createCourse(data) {
-    const response = await fetch('http://localhost:5000/api/courses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  },
-  async updateCourse(id, data) {
-    const response = await fetch(`http://localhost:5000/api/courses/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  },
-  async deleteCourse(id) {
-    const response = await fetch(`http://localhost:5000/api/courses/${id}`, { method: 'DELETE' });
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  },
-  async getModules(courseId) {
-    const response = await fetch(`http://localhost:5000/api/courses/${courseId}/modules`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  },
-  async createModule(courseId, data) {
-    const response = await fetch(`http://localhost:5000/api/courses/${courseId}/modules`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  },
-  async getAnnouncements(courseId) {
-    const response = await fetch(`http://localhost:5000/api/courses/${courseId}/announcements`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  },
-  async createAnnouncement(courseId, data) {
-    const response = await fetch(`http://localhost:5000/api/courses/${courseId}/announcements`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  }
-};
-
 const CourseForm = () => {
   const [courses, setCourses] = useState([]);
   const [courseName, setCourseName] = useState('');
@@ -67,14 +8,30 @@ const CourseForm = () => {
   const [selectedCourseId, setSelectedCourseId] = useState(null);
   const [modules, setModules] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [apiReady, setApiReady] = useState(false);
 
   useEffect(() => {
-    fetchCourses();
+    console.log('CourseForm useEffect: Checking for window.api...');
+    const checkApi = setInterval(() => {
+      if (typeof window.api !== 'undefined' && typeof window.api.getCourses === 'function') {
+        console.log('CourseForm: window.api is defined and getCourses is a function');
+        clearInterval(checkApi);
+        setApiReady(true);
+        fetchCourses();
+      } else {
+        console.warn('CourseForm: window.api or window.api.getCourses is not defined yet');
+      }
+    }, 100);
+    return () => clearInterval(checkApi);
   }, []);
 
   const fetchCourses = async () => {
+    if (!apiReady) {
+      console.error('CourseForm: API not ready for fetchCourses');
+      return;
+    }
     try {
-      const data = await api.getCourses();
+      const data = await window.api.getCourses();
       setCourses(data);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -83,9 +40,14 @@ const CourseForm = () => {
 
   const handleCreateCourse = async (e) => {
     e.preventDefault();
+    if (!apiReady) {
+      console.error('CourseForm: API not ready for handleCreateCourse');
+      return;
+    }
     try {
       console.log('Creating course with name:', courseName);
-      await api.createCourse({ name: courseName });
+      const result = await window.api.createCourse({ name: courseName });
+      console.log('Create course result:', result);
       setCourseName('');
       fetchCourses();
     } catch (error) {
@@ -94,8 +56,12 @@ const CourseForm = () => {
   };
 
   const handleUpdateCourse = async (id, name) => {
+    if (!apiReady) {
+      console.error('CourseForm: API not ready for handleUpdateCourse');
+      return;
+    }
     try {
-      await api.updateCourse(id, { name });
+      await window.api.updateCourse(id, { name });
       fetchCourses();
     } catch (error) {
       console.error('Error updating course:', error);
@@ -103,8 +69,12 @@ const CourseForm = () => {
   };
 
   const handleDeleteCourse = async (id) => {
+    if (!apiReady) {
+      console.error('CourseForm: API not ready for handleDeleteCourse');
+      return;
+    }
     try {
-      await api.deleteCourse(id);
+      await window.api.deleteCourse(id);
       fetchCourses();
     } catch (error) {
       console.error('Error deleting course:', error);
@@ -113,9 +83,13 @@ const CourseForm = () => {
 
   const handleSelectCourse = async (id) => {
     setSelectedCourseId(id);
+    if (!apiReady) {
+      console.error('CourseForm: API not ready for handleSelectCourse');
+      return;
+    }
     try {
-      const mods = await api.getModules(id);
-      const anns = await api.getAnnouncements(id);
+      const mods = await window.api.getModules(id);
+      const anns = await window.api.getAnnouncements(id);
       setModules(mods);
       setAnnouncements(anns);
     } catch (error) {
@@ -125,8 +99,12 @@ const CourseForm = () => {
 
   const handleCreateModule = async (e) => {
     e.preventDefault();
+    if (!apiReady) {
+      console.error('CourseForm: API not ready for handleCreateModule');
+      return;
+    }
     try {
-      await api.createModule(selectedCourseId, { title: moduleTitle });
+      await window.api.createModule(selectedCourseId, { title: moduleTitle });
       setModuleTitle('');
       handleSelectCourse(selectedCourseId);
     } catch (error) {
@@ -136,8 +114,12 @@ const CourseForm = () => {
 
   const handleCreateAnnouncement = async (e) => {
     e.preventDefault();
+    if (!apiReady) {
+      console.error('CourseForm: API not ready for handleCreateAnnouncement');
+      return;
+    }
     try {
-      await api.createAnnouncement(selectedCourseId, { text: announcementText });
+      await window.api.createAnnouncement(selectedCourseId, { text: announcementText });
       setAnnouncementText('');
       handleSelectCourse(selectedCourseId);
     } catch (error) {
