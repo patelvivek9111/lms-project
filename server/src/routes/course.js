@@ -13,10 +13,15 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    console.log('POST /api/courses - Request body:', req.body);
     const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
     const course = await Course.create({ name });
     res.status(201).json(course);
   } catch (error) {
+    console.error('POST /api/courses - Error:', error);
     res.status(400).json({ error: error.message });
   }
 });

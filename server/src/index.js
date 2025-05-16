@@ -8,12 +8,16 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Initialize database
-initDb();
-
 // Middleware
 app.use(cors({ origin: 'http://localhost:8080' }));
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url} - Body:`, req.body);
+  next();
+});
+
+// Initialize database
+initDb();
 
 // Routes
 app.use('/api/courses', courseRoutes);

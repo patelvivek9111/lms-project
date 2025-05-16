@@ -15,9 +15,8 @@ const CourseForm = () => {
     const checkApi = setInterval(() => {
       if (typeof window.api !== 'undefined' && typeof window.api.getCourses === 'function') {
         console.log('CourseForm: window.api is defined and getCourses is a function');
-        clearInterval(checkApi);
         setApiReady(true);
-        fetchCourses();
+        clearInterval(checkApi);
       } else {
         console.warn('CourseForm: window.api or window.api.getCourses is not defined yet');
       }
@@ -25,14 +24,18 @@ const CourseForm = () => {
     return () => clearInterval(checkApi);
   }, []);
 
-  const fetchCourses = async () => {
-    if (!apiReady) {
-      console.error('CourseForm: API not ready for fetchCourses');
-      return;
+  useEffect(() => {
+    if (apiReady) {
+      console.log('CourseForm: apiReady is true, calling fetchCourses');
+      fetchCourses();
     }
+  }, [apiReady]);
+
+  const fetchCourses = async () => {
     try {
+      console.log('CourseForm: Fetching courses...');
       const data = await window.api.getCourses();
-      setCourses(data);
+      setCourses(data || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
     }
@@ -52,6 +55,9 @@ const CourseForm = () => {
       fetchCourses();
     } catch (error) {
       console.error('Error creating course:', error);
+      if (error.message.includes('Network response was not ok')) {
+        console.error('Check backend logs for 400 Bad Request details');
+      }
     }
   };
 
@@ -90,8 +96,8 @@ const CourseForm = () => {
     try {
       const mods = await window.api.getModules(id);
       const anns = await window.api.getAnnouncements(id);
-      setModules(mods);
-      setAnnouncements(anns);
+      setModules(mods || []);
+      setAnnouncements(anns || []);
     } catch (error) {
       console.error('Error fetching course details:', error);
     }
@@ -163,7 +169,7 @@ const CourseForm = () => {
         React.createElement('input', {
           type: 'text',
           value: moduleTitle,
-          onChange: (e) => setModuleTitle(e.target.value),
+          onChange: (e) => setCourseName(e.target.value),
           placeholder: 'Module title',
           required: true
         }),
